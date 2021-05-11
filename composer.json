@@ -1,0 +1,31 @@
+{
+    "name": "dptsi/laravel-filestorage",
+    "description": "Package File Storage developed for DPTSI projects",
+    "type": "library",
+    "authors": [
+        {
+            "name": "DPTSI ITS",
+            "email": "developer@its.ac.id"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php": "^7.4|8.0.*",
+        "ext-pdo": "*",
+        "laravel/framework": "^8.12",
+        "predis/predis": "2.0.x-dev",
+        "guzzlehttp/guzzle": "7.4.x-dev"
+    },
+    "autoload": {
+        "psr-4": {
+          "Dptsi\\FileStorage\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Dptsi\\FileStorage\\Providers\\FileStorageServiceProvider"
+            ]
+        }
+    }
+}
