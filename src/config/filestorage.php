@@ -1,5 +1,6 @@
 <?php
 
+// config file storage
 return [
     'base_uri'          => env('FILE_STORAGE_BASE_URI'),
     'myits_uri'        => env('FILE_STORAGE_MYITS_URI'),

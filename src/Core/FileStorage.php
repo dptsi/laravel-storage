@@ -44,7 +44,7 @@ class FileStorage
         return json_decode($response->getBody()->getContents());
     }
 
-    public function generateToken()
+    public static function generateToken()
     {
         $client = new Client([
             'base_uri'      => config('filestorage.myits_uri'),
@@ -62,10 +62,5 @@ class FileStorage
         $response = json_decode($response->getBody()->getContents());
 
         Redis::set('access_token', $response->access_token, 'EX', 3600);
-    }
-
-    public static function test($file_name, $file_ext)
-    {
-        return $file_name . "." . $file_ext;
     }
 }
