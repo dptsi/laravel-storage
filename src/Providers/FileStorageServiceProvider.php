@@ -10,15 +10,18 @@ class FileStorageServiceProvider extends ServiceProvider
 
     public function boot()
     {
-        $this->publishes([
-            __DIR__ . '/../config/filestorage.php' => config_path('filestorage.php')
-        ]);
+        $this->publish();
     }
 
     public function register()
     {
-        $this->app->singleton(FileStorage::class, function(){
-            return new FileStorage();
-        });
+        $this->app->singleton('file_storage', FileStorage::class);
+    }
+
+    protected function publish()
+    {
+        $this->publishes([
+            __DIR__ . '/../config/filestorage.php' => config_path('filestorage.php')
+        ]);
     }
 }
