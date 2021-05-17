@@ -8,13 +8,9 @@ use Illuminate\Support\Facades\Cache;
 class FileStorage 
 {
 
-    public static function upload($file_name, $file_ext, $mime_type, $base64_encoded_data)
+    public static function upload(String $file_name, String $file_ext, String $mime_type, String $base64_encoded_data)
     {
-        if(Cache::has('access_token')){
-            continue;
-        } else {
-            self::generateToken();
-        }
+        self::checkToken();
 
         $client = new Client([
             'base_uri'  => config('filestorage.base_uri'),
@@ -37,11 +33,7 @@ class FileStorage
 
     public static function delete($file_id)
     {
-        if(Cache::has('access_token')){
-            continue;
-        } else {
-            self::generateToken();
-        }
+        self::checkToken();
 
         $client = new Client([
             'base_uri'  => config('filestorage.base_uri'),
@@ -74,5 +66,15 @@ class FileStorage
         $response = json_decode($response->getBody()->getContents());
 
         Cache::put('access_token', $response->access_token, $seconds = 3550);
+    }
+
+    protected static function checkToken()
+    {
+        if(Cache::has('access_token')){
+            return;
+        } else {
+            self::generateToken();
+            sleep(2);
+        }
     }
 }
