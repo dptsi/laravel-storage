@@ -56,7 +56,7 @@ class FileStorage
         return json_decode($response->getBody()->getContents());
     }
 
-    public static function generateToken()
+    protected static function generateToken()
     {
         $client = new Client([
             'base_uri'      => config('filestorage.myits_uri'),
