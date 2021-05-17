@@ -3,18 +3,24 @@
 namespace Dptsi\FileStorage\Core;
 
 use GuzzleHttp\Client;
-use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Cache;
 
 class FileStorage 
 {
 
     public static function upload($file_name, $file_ext, $mime_type, $base64_encoded_data)
     {
+        if(Cache::has('access_token')){
+            continue;
+        } else {
+            self::generateToken();
+        }
+
         $client = new Client([
             'base_uri'  => config('filestorage.base_uri'),
         ]);
         $data['headers'] = [
-            'x-code'        => Redis::get('access_token'),
+            'x-code'        => Cache::get('access_token'),
             'x-client-id'   => config('filestorage.client_id'),
             'Content-Type'  => 'application/json',
         ];
@@ -31,11 +37,17 @@ class FileStorage
 
     public static function delete($file_id)
     {
+        if(Cache::has('access_token')){
+            continue;
+        } else {
+            self::generateToken();
+        }
+
         $client = new Client([
             'base_uri'  => config('filestorage.base_uri'),
         ]);
         $data['headers'] = [
-            'x-code'        => Redis::get('access_token'),
+            'x-code'        => Cache::get('access_token'),
             'x-client-id'   => config('filestorage.client_id'),
             'Content-Type'  => 'application/json',
         ];
@@ -61,6 +73,6 @@ class FileStorage
 
         $response = json_decode($response->getBody()->getContents());
 
-        Redis::set('access_token', $response->access_token, 'EX', 3600);
+        Cache::put('access_token', $response->access_token, $seconds = 3550);
     }
 }
