@@ -21,9 +21,12 @@ class FileStorageServiceProvider extends ServiceProvider
 
     protected function publish()
     {
-        $this->publishes([
-            __DIR__ . '/../config/filestorage.php' => config_path('filestorage.php')
-        ]);
+        $this->publishes(
+            [
+                __DIR__ . '/../config/filestorage.php' => config_path('filestorage.php')
+            ],
+            'dptsi-storage'
+        );
     }
 
     protected function createToken()
