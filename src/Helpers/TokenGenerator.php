@@ -39,11 +39,7 @@ class TokenGenerator
 
     public static function checkToken()
     {
-        if(Cache::has('access_token')){
-            return;
-        } else {
+        if(!Cache::has('access_token'))
             self::generateToken();
-            return;
-        }
     }
 }
