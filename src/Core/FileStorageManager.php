@@ -4,11 +4,24 @@ namespace Dptsi\FileStorage\Core;
 
 use Dptsi\FileStorage\Helpers\TokenGenerator;
 use GuzzleHttp\Client;
+use Illuminate\Http\UploadedFile;
 
 class FileStorageManager
 {
-    public function upload(String $file_name, String $file_ext, String $mime_type, String $base64_encoded_data)
+    public function upload(UploadedFile $request)
     {
+        $filename_extension = $request->getClientOriginalName();
+
+        $filename = pathinfo($filename_extension, PATHINFO_FILENAME);
+        $filename = preg_replace("/[^a-zA-Z0-9]+/", "", $filename);
+        if ($filename == '') {
+            $filename = 'undefined'.time();
+        }
+
+        $extension = pathinfo($filename_extension, PATHINFO_EXTENSION);
+
+        $b64 = base64_encode(file_get_contents($request));
+
         TokenGenerator::checkToken();
 
         $client = new Client([
@@ -22,10 +35,10 @@ class FileStorageManager
         ];
 
         $data['body'] = json_encode([
-            'file_name'         => $file_name,
-            'file_ext'          => $file_ext,
-            'mime_type'         => $mime_type,
-            'binary_data_b64'   => $base64_encoded_data,
+            'file_name'         => $filename,
+            'file_ext'          => $extension,
+            'mime_type'         => $request->getMimeType(),
+            'binary_data_b64'   => $b64,
         ]);
 
         $response = $client->post('/d/files', $data);
