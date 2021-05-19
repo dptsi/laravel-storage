@@ -1,33 +1,30 @@
 {
-    "name": "dptsi/laravel-storage",
-    "description": "Laravel file storage package for ITS file storage API",
-    "type": "library",
-
-    "authors": [
-        {
-            "name": "DPTSI ITS",
-            "email": "developer@its.ac.id"
-        }
-    ],
-
-    "minimum-stability": "dev",
-    "require": {
-        "php": "^7.4|8.0.*",
-        "laravel/framework": "^8.12",
-        "guzzlehttp/guzzle": "^7.0.1"
-    },
-
-    "autoload": {
-        "psr-4": {
-          "Dptsi\\FileStorage\\": "src/"
-        }
-    },
-    
-    "extra": {
-        "laravel": {
-            "providers": [
-                "Dptsi\\FileStorage\\Providers\\FileStorageServiceProvider"
-            ]
-        }
+  "name": "dptsi/laravel-storage",
+  "description": "Laravel file storage package for ITS file storage API",
+  "type": "library",
+  "authors": [
+    {
+      "name": "DPTSI ITS",
+      "email": "developer@its.ac.id"
     }
+  ],
+  "minimum-stability": "dev",
+  "require": {
+    "php": "^7.4|8.0.*",
+    "laravel/framework": "^8.12",
+    "guzzlehttp/guzzle": "^7.0.1",
+    "ext-json": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Dptsi\\FileStorage\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Dptsi\\FileStorage\\Providers\\FileStorageServiceProvider"
+      ]
+    }
+  }
 }
