@@ -3,7 +3,7 @@
 namespace Dptsi\FileStorage\Providers;
 
 use Dptsi\FileStorage\Helpers\TokenGenerator;
-use Dptsi\FileStorage\Core\ManageFile;
+use Dptsi\FileStorage\Core\FileStorageManager;
 use Illuminate\Support\ServiceProvider;
 
 class FileStorageServiceProvider extends ServiceProvider 
@@ -16,7 +16,7 @@ class FileStorageServiceProvider extends ServiceProvider
 
     public function register()
     {
-        $this->app->singleton('file_storage', ManageFile::class);
+        $this->app->singleton('file_storage', FileStorageManager::class);
     }
 
     protected function publish()
