@@ -24,7 +24,17 @@ class TokenGenerator
 
         $response = json_decode($response->getBody()->getContents());
 
-        Cache::put('access_token', $response->access_token, $seconds = 3550);
+        self::onGenerateToken($response->access_token);
+    }
+
+    public static function onGenerateToken($token)
+    {
+        Cache::put('access_token', $token, $seconds = 3550);
+    }
+
+    public static function getTokenCallback()
+    {
+        return Cache::get('access_token');
     }
 
     public static function checkToken()
@@ -33,7 +43,7 @@ class TokenGenerator
             return;
         } else {
             self::generateToken();
-            sleep(2);
+            return;
         }
     }
 }

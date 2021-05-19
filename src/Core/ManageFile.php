@@ -4,7 +4,6 @@ namespace Dptsi\FileStorage\Core;
 
 use Dptsi\FileStorage\Helpers\TokenGenerator;
 use GuzzleHttp\Client;
-use Illuminate\Support\Facades\Cache;
 
 class FileStorage 
 {
@@ -19,7 +18,7 @@ class FileStorage
             'base_uri'  => config('filestorage.base_uri'),
         ]);
         $data['headers'] = [
-            'x-code'        => Cache::get('access_token'),
+            'x-code'        => $generator->getTokenCallback(),
             'x-client-id'   => config('filestorage.client_id'),
             'Content-Type'  => 'application/json',
         ];
@@ -44,7 +43,7 @@ class FileStorage
             'base_uri'  => config('filestorage.base_uri'),
         ]);
         $data['headers'] = [
-            'x-code'        => Cache::get('access_token'),
+            'x-code'        => $generator->getTokenCallback(),
             'x-client-id'   => config('filestorage.client_id'),
             'Content-Type'  => 'application/json',
         ];
