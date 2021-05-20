@@ -12,6 +12,7 @@ class FileStorageManager
 {
     private Closure $generate_token_callback;
     private Closure $request_token_callback;
+    private Closure $check_token_callback;
     private int $max_retry = 3;
 
     public function onGenerateToken(Closure $callback)
@@ -22,6 +23,11 @@ class FileStorageManager
     public function onRequestToken(Closure $callback)
     {
         $this->request_token_callback = $callback;
+    }
+
+    public function onCheckToken(Closure $callback)
+    {
+        $this->check_token_callback = $callback;
     }
 
     public function upload(UploadedFile $request)
@@ -87,7 +93,7 @@ class FileStorageManager
 
     private function ensureTokenAvailable(): void
     {
-        if (!$this->getToken()) {
+        if (!$this->hasToken()) {
             $this->generateToken();
         }
     }
@@ -95,6 +101,11 @@ class FileStorageManager
     private function getToken(): string
     {
         return ($this->request_token_callback)();
+    }
+
+    private function hasToken(): bool
+    {
+        return ($this->check_token_callback)();
     }
 
     private function generateToken(): void
