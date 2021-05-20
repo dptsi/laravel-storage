@@ -32,6 +32,12 @@ class FileStorageServiceProvider extends ServiceProvider
                     }
                 );
 
+                $storage->onCheckToken(
+                    function () {
+                        return Cache::has('access_token');
+                    }
+                );
+
                 return $storage;
             }
         );
