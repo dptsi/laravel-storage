@@ -54,7 +54,7 @@ class FileStorageManager
             try {
                 $client = new Client(
                     [
-                        'base_uri' => config('filestorage.base_uri'),
+                        'base_uri' => config('filestorage.host_uri'),
                     ]
                 );
 
@@ -112,7 +112,7 @@ class FileStorageManager
     {
         $client = new Client(
             [
-                'base_uri' => config('filestorage.myits_uri'),
+                'base_uri' => config('filestorage.authorization_server_uri'),
             ]
         );
         $data['headers'] = [
@@ -130,9 +130,8 @@ class FileStorageManager
         ($this->generate_token_callback)($response->access_token);
     }
 
-    public function delete(
-        $file_id
-    ) {
+    public function delete($file_id) 
+    {
         $this->ensureTokenAvailable();
 
         $attempts = 0;
@@ -143,7 +142,7 @@ class FileStorageManager
             try {
                 $client = new Client(
                     [
-                        'base_uri' => config('filestorage.base_uri'),
+                        'base_uri' => config('filestorage.host_uri'),
                     ]
                 );
 
