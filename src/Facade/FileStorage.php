@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\Facade;
 /**
  * Class FileStorage
  * @package Dptsi\FileStorage\Facade
- * @method static array upload(\Illuminate\Http\UploadedFile $request)
- * @method static array delete(string $file_id)
+ * @method static mixed upload(\Illuminate\Http\File|\Illuminate\Http\UploadedFile $request)
+ * @method static mixed delete(string $file_id)
  */
 
 class FileStorage extends Facade

@@ -3,9 +3,11 @@
 namespace Dptsi\FileStorage\Core;
 
 use Closure;
+use Dptsi\FileStorage\Exception\InvalidArgument;
 use Dptsi\FileStorage\Exception\ServerFailure;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ServerException;
+use Illuminate\Http\File;
 use Illuminate\Http\UploadedFile;
 
 class FileStorageManager
@@ -30,19 +32,33 @@ class FileStorageManager
         $this->check_token_callback = $callback;
     }
 
-    public function upload(UploadedFile $request)
+    public function upload($request)
     {
-        $filename_extension = $request->getClientOriginalName();
+        if($request instanceof UploadedFile) {
+            $filename_extension = $request->getClientOriginalName();
 
-        $filename = pathinfo($filename_extension, PATHINFO_FILENAME);
-        $filename = preg_replace("/[^a-zA-Z0-9]+/", "", $filename);
-        if ($filename == '') {
-            $filename = 'undefined' . time();
+            $filename = pathinfo($filename_extension, PATHINFO_FILENAME);
+            $filename = preg_replace("/[^a-zA-Z0-9]+/", "", $filename);
+            if ($filename == '') {
+                $filename = 'undefined' . time();
+            }
+
+            $extension = pathinfo($filename_extension, PATHINFO_EXTENSION);
+
+            $b64 = base64_encode(file_get_contents($request));
+        } elseif ($request instanceof File) {
+            $filename = pathinfo($request->getRealPath(), PATHINFO_FILENAME);
+            $filename = preg_replace("/[^a-zA-Z0-9]+/", "", $filename);
+            if ($filename == '') {
+                $filename = 'undefined' . time();
+            }
+
+            $extension = pathinfo($request->getRealPath(), PATHINFO_EXTENSION);
+
+            $b64 = base64_encode(file_get_contents($request));
+        } else {
+            throw new InvalidArgument('Unsupported argument type.');
         }
-
-        $extension = pathinfo($filename_extension, PATHINFO_EXTENSION);
-
-        $b64 = base64_encode(file_get_contents($request));
 
         $this->ensureTokenAvailable();
 
@@ -85,7 +101,7 @@ class FileStorageManager
         } while ($attempts < $this->max_retry);
 
         if (!$response) {
-            throw new ServerFailure();
+            throw new ServerFailure('Server error.');
         }
 
         return json_decode($response->getBody()->getContents());
@@ -164,7 +180,7 @@ class FileStorageManager
         } while ($attempts < $this->max_retry);
 
         if (!$response) {
-            throw new ServerFailure();
+            throw new ServerFailure('Server error.');
         }
 
         return json_decode($response->getBody()->getContents());
