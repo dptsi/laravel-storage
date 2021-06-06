@@ -12,10 +12,22 @@ use Illuminate\Http\UploadedFile;
 
 class FileStorageManager
 {
+    public const STATUS_SUCCESS = 'OK';
+    public const STATUS_ERROR = 'ERR';
     private Closure $generate_token_callback;
     private Closure $request_token_callback;
     private Closure $check_token_callback;
     private int $max_retry = 3;
+
+    public function statusSuccess()
+    {
+        return self::STATUS_SUCCESS;
+    }
+
+    public function statusError()
+    {
+        return self::STATUS_ERROR;
+    }
 
     public function onGenerateToken(Closure $callback)
     {

@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Facade;
  * @package Dptsi\FileStorage\Facade
  * @method static mixed upload(\Illuminate\Http\File|\Illuminate\Http\UploadedFile $request)
  * @method static mixed delete(string $file_id)
+ * @method static string statusSuccess()
+ * @method static string statusError()
  */
 
 class FileStorage extends Facade
