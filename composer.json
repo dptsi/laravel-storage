@@ -1,6 +1,6 @@
 {
   "name": "dptsi/laravel-storage",
-  "description": "Laravel file storage package for ITS file storage API",
+  "description": "Laravel helper package for access ITS file storage API",
   "type": "library",
   "authors": [
     {
