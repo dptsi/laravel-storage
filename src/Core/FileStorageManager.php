@@ -198,6 +198,46 @@ class FileStorageManager
         return json_decode($response->getBody()->getContents());
     }
 
+    public function getById($file_id) 
+    {
+        $this->ensureTokenAvailable();
+
+        $attempts = 0;
+
+        $response = null;
+
+        do {
+            try {
+                $client = new Client(
+                    [
+                        'base_uri' => config('filestorage.host_uri'),
+                    ]
+                );
+
+                $data['headers'] = [
+                    'x-code' => $this->getToken(),
+                    'x-client-id' => config('filestorage.client_id'),
+                    'Content-Type' => 'application/json',
+                ];
+
+                $response = $client->get('/d/files/' . $file_id, $data);
+            } catch (ServerException $e) {
+                // Handle exception lain dari API
+                $attempts++;
+                $this->generateToken();
+                continue;
+            }
+
+            break;
+        } while ($attempts < $this->max_retry);
+
+        if (!$response) {
+            throw new ServerFailure('Server error.');
+        }
+
+        return json_decode($response->getBody()->getContents());
+    }
+
     public function setMaxRetry(int $max_retry): void
     {
         $this->max_retry = $max_retry;
