@@ -198,7 +198,7 @@ class FileStorageManager
         return json_decode($response->getBody()->getContents());
     }
 
-    public function getById($file_id) 
+    public function getFileById($file_id) 
     {
         $this->ensureTokenAvailable();
 
