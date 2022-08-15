@@ -44,6 +44,58 @@ class FileStorageManager
         $this->check_token_callback = $callback;
     }
 
+    public function uploadBase64File($filename, $extension, $mimetype, $base64file){
+        if(empty($filename) || empty($extension) || empty($mimetype) || empty($base64file)){
+            throw new InvalidArgument('Unsupported argument type.');
+        }
+
+        $this->ensureTokenAvailable();
+
+        $attempts = 0;
+
+        $response = null;
+
+        do {
+            try {
+                $client = new Client(
+                    [
+                        'base_uri' => config('filestorage.host_uri'),
+                    ]
+                );
+
+                $data['headers'] = [
+                    'x-code' => $this->getToken(),
+                    'x-client-id' => config('filestorage.client_id'),
+                    'Content-Type' => 'application/json',
+                ];
+
+                $data['body'] = json_encode(
+                    [
+                        'file_name' => $filename,
+                        'file_ext' => $extension,
+                        'mime_type' => $mimetype,
+                        'binary_data_b64' => $base64file,
+                    ]
+                );
+
+                $response = $client->post('/d/files', $data);
+            } catch (ServerException $e) {
+                // Handle exception lain dari API
+                $attempts++;
+                $this->generateToken();
+                continue;
+            }
+
+            break;
+        } while ($attempts < $this->max_retry);
+
+        if (!$response) {
+            throw new ServerFailure('Server error.');
+        }
+
+        return json_decode($response->getBody()->getContents());
+    }
+
     public function upload($request)
     {
         if($request instanceof UploadedFile) {
