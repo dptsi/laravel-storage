@@ -9,6 +9,10 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ServerException;
 use Illuminate\Http\File;
 use Illuminate\Http\UploadedFile;
+use Aws\S3\S3Client;
+use Aws\S3\Exception\S3Exception;
+use DateTime;
+use Carbon\Carbon;
 
 class FileStorageManager
 {
@@ -293,5 +297,227 @@ class FileStorageManager
     public function setMaxRetry(int $max_retry): void
     {
         $this->max_retry = $max_retry;
+    }
+
+    public function getAwsClient() : S3Client 
+    {
+        $s3 = new S3Client([
+            'version' => 'latest',
+            'region' => config('filestorage.aws_region'),
+            'credentials' => [
+                'key'    => config('filestorage.aws_key'),
+                'secret' => config('filestorage.aws_secret')
+            ]
+        ]);	
+
+        return $s3;
+    }
+
+    public function awsUpload($request, string $subdirectory = null)
+    {
+        if($request instanceof UploadedFile) {
+            $filename_extension = $request->getClientOriginalName();
+
+            $original_name = pathinfo($filename_extension, PATHINFO_FILENAME);
+            $original_name = preg_replace("/[^a-zA-Z0-9]+/", "", $original_name);
+            if ($original_name == '') {
+                $original_name = 'undefined' . time();
+            }
+
+            $extension = $request->extension();
+            $filename = $request->hashName();
+            $filesize = $request->getSize();
+            $mime_type = $request->getMimeType();
+
+            $datafile = file_get_contents($request);
+
+        } elseif ($request instanceof File) {
+            $original_name = pathinfo($request->path(), PATHINFO_FILENAME);
+            $original_name = preg_replace("/[^a-zA-Z0-9]+/", "", $original_name);
+            if ($original_name == '') {
+                $original_name = 'undefined' . time();
+            }
+
+            $extension = pathinfo($request->getRealPath(), PATHINFO_EXTENSION);
+            $filename = $request->hashName();
+            $filesize = $request->getSize();
+            $mime_type = $request->getMimeType();
+
+            $datafile = file_get_contents($request);
+
+        } else {
+            throw new InvalidArgument('Unsupported argument type.');
+        }
+
+        $response = null;
+
+        try {
+            $client = $this->getAwsClient();
+
+            $file_id = '';
+
+            if($subdirectory){
+                $file_id .= $subdirectory.'/';
+            }
+
+            $file_id .= $filename;
+
+            $result =  $client->putObject([
+                'Bucket' => config('filestorage.aws_bucket'),
+                'Key'    => $file_id,
+                'Body' => $datafile
+            ]);
+
+            $data = array(
+                'file_id' => $file_id,
+                'info' => array(
+                    'file_ext' => $extension,
+                    'file_id' => $file_id,
+                    'file_mimetype' => $mime_type,
+                    'file_name' => $original_name,
+                    'file_size' => $filesize,
+                    'public_link' => $result->get('ObjectURL'),
+                    'tag' => $result->get('ETag'),
+                    'timestamp' => date('Y-m-d H:m:s')
+                    ),
+                'message' => 'INSERT '.$file_id,
+                'status' => self::STATUS_SUCCESS
+            );
+            $response = json_decode(json_encode($data), FALSE);
+
+        } catch (S3Exception $e) {
+            $data = array(
+                'message' => $e->getAwsErrorMessage(),
+                'status' => self::STATUS_ERROR
+            );
+
+            $response = json_decode(json_encode($data), FALSE);
+        }
+
+        if (!$response) {
+            throw new ServerFailure('Server error.');
+        }
+
+        return $response;
+
+    }
+
+    public function awsDelete(string $aws_file_id)
+    {
+        $response = null;
+
+        try {
+            $client = $this->getAwsClient();
+
+            $result =  $client->deleteObject([
+                'Bucket' => config('filestorage.aws_bucket'),
+                'Key'    => $aws_file_id
+            ]);
+
+            $data = array(
+                'message' => 'DELETE '.$aws_file_id,
+                'status' => self::STATUS_SUCCESS
+            );
+
+            $response = json_decode(json_encode($data), FALSE);
+        } catch (S3Exception $e) {
+            $data = array(
+                'message' => $e->getAwsErrorMessage(),
+                'status' => self::STATUS_ERROR
+            );
+
+            $response = json_decode(json_encode($data), FALSE);
+        }
+
+        if (!$response) {
+            throw new ServerFailure('Server error.');
+        }
+
+        return $response;
+
+    }
+
+    public function awsGetFileById(string $aws_file_id)
+    {
+        $response = null;
+
+        try {
+            $client = $this->getAwsClient();
+
+            $result =  $client->getObject([
+                'Bucket' => config('filestorage.aws_bucket'),
+                'Key'    => $aws_file_id
+            ]);
+
+            $data = array(
+                'data' => base64_encode($result->get('Body')->getContents()),
+                'info' => array(
+                    'file_ext' => pathinfo($result->get('@metadata')['effectiveUri'], PATHINFO_EXTENSION),
+                    'file_mimetype' => $result->get('ContentType'),
+                    'file_id' => $aws_file_id,
+                    'file_size' => $result->get('ContentLength'),
+                    'public_link' => $result->get('@metadata')['effectiveUri'],
+                    'tag' => $result->get('ETag'),
+                    'timestamp' => date('Y-m-d H:m:s')
+                    ),
+                'status' => self::STATUS_SUCCESS
+            );
+
+            $response = json_decode(json_encode($data), FALSE);
+        } catch (S3Exception $e) {
+            $data = array(
+                'message' => $e->getAwsErrorMessage(),
+                'status' => self::STATUS_ERROR
+            );
+
+            $response = json_decode(json_encode($data), FALSE);
+        }
+
+        if (!$response) {
+            throw new ServerFailure('Server error.');
+        }
+
+        return $response;
+    }
+
+    public function awsGetTemporaryPublicLink(string $aws_file_id, DateTime $datetime = null)
+    {
+        $response = null;
+
+        if(!$datetime){
+            $datetime = Carbon::now()->addMinutes(30);
+        }
+
+        try {
+            $client = $this->getAwsClient();
+
+            $cmd =  $client->getCommand('GetObject',[
+                'Bucket' => config('filestorage.aws_bucket'),
+                'Key'    => $aws_file_id
+            ]);
+
+            $request = $client->createPresignedRequest($cmd, $datetime);
+
+            $data = array(
+                'url' => (string)$request->getUri(),
+                'expired_at' => $datetime->toDateTimeString(),
+                'status' => self::STATUS_SUCCESS
+            );
+
+            $response = json_decode(json_encode($data), FALSE);
+        } catch (S3Exception $e) {
+            $data = array(
+                'message' => $e->getAwsErrorMessage(),
+                'status' => self::STATUS_ERROR
+            );
+
+            $response = json_decode(json_encode($data), FALSE);
+        }
+
+        if (!$response) {
+            throw new ServerFailure('Server error.');
+        }
+
+        return $response;
     }
 }
