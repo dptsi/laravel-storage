@@ -113,6 +113,7 @@ FileStorage::awsUpload($request->file('berkas'), 'assets/images')
 
 ```
 
+### Make Temporary link from Aws S3 
 You can use temporary public uri with 
 > @method static mixed awsGetTemporaryPublicLink(string $aws_file_id, DateTime $datetime = null)
 
