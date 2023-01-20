@@ -98,7 +98,13 @@ if($response->status == FileStorage::statusError())
 ```
 
 ### AWS
-Make sure your config on filestorage.php
+Make sure your aws config exist on filestorage.php
+```php
+    'aws_key'                   => env('AWS_ACCESS_KEY_ID'),
+    'aws_secret'                => env('AWS_SECRET_ACCESS_KEY'),
+    'aws_region'                => env('AWS_DEFAULT_REGION'),
+    'aws_bucket'                => env('AWS_BUCKET'),
+```
 ### Upload to Aws
 
 > @method static mixed awsUpload(\Illuminate\Http\File|\Illuminate\Http\UploadedFile $request, string $subdirectory = null)
