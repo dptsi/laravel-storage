@@ -97,12 +97,14 @@ use Dptsi\FileStorage\Facade\FileStorage;
 if($response->status == FileStorage::statusError())
 ```
 
+### AWS
+Make sure your config on filestorage.php
 ### Upload to Aws
 
 > @method static mixed awsUpload(\Illuminate\Http\File|\Illuminate\Http\UploadedFile $request, string $subdirectory = null)
 
 Using form(`\Illuminate\Http\UploadedFile`)
-Using the optional parameter sub-directory to make files uploaded to a sub-directory instead of the root directory
+Using the optional parameter sub-directory to make files uploaded to a sub-directory instead of the root directory. File ID on AWS S3 use name of uploaded file instead generate uuid for that file, so make sure filename is unique.
 
 ```php
 use Dptsi\FileStorage\Facade\FileStorage;
@@ -113,7 +115,7 @@ FileStorage::awsUpload($request->file('berkas'), 'assets/images')
 
 ```
 
-### Make Temporary link from Aws S3 
+### Make Temporary public link from Aws S3 
 You can use temporary public uri with 
 > @method static mixed awsGetTemporaryPublicLink(string $aws_file_id, DateTime $datetime = null)
 
@@ -125,3 +127,14 @@ FileStorage::awsGetTemporaryPublicLink('fileid.pdf', Carbon::now->addMinutes(5))
 ```
 
 Using fileid string and optional Datetime for how long the url can be used, by default the url can be used for 30 minutes.
+
+### Get File From Aws
+You can get file from aws S3 storage with 
+> @method static mixed awsGetFileById(string $aws_file_id)
+
+```php
+use Dptsi\FileStorage\Facade\FileStorage;
+
+FileStorage::awsGetFileById('aws_file_id');
+
+```
