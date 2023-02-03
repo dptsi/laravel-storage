@@ -313,7 +313,7 @@ class FileStorageManager
         return $s3;
     }
 
-    public function awsUpload($request, string $subdirectory = null)
+    public function awsUpload($request, string $subdirectory = null, string $bucketname = null)
     {
         if($request instanceof UploadedFile) {
             $filename_extension = $request->getClientOriginalName();
@@ -363,7 +363,7 @@ class FileStorageManager
             $file_id .= $filename;
 
             $result =  $client->putObject([
-                'Bucket' => config('filestorage.aws_bucket'),
+                'Bucket' => !is_null($bucketname) ? $bucketname : config('filestorage.aws_bucket'),
                 'Key'    => $file_id,
                 'Body' => $datafile
             ]);
@@ -402,7 +402,7 @@ class FileStorageManager
 
     }
 
-    public function awsDelete(string $aws_file_id)
+    public function awsDelete(string $aws_file_id, string $bucketname = null)
     {
         $response = null;
 
@@ -410,7 +410,7 @@ class FileStorageManager
             $client = $this->getAwsClient();
 
             $result =  $client->deleteObject([
-                'Bucket' => config('filestorage.aws_bucket'),
+                'Bucket' => !is_null($bucketname) ? $bucketname : config('filestorage.aws_bucket'),
                 'Key'    => $aws_file_id
             ]);
 
@@ -437,7 +437,7 @@ class FileStorageManager
 
     }
 
-    public function awsGetFileById(string $aws_file_id)
+    public function awsGetFileById(string $aws_file_id, string $bucketname = null)
     {
         $response = null;
 
@@ -445,7 +445,7 @@ class FileStorageManager
             $client = $this->getAwsClient();
 
             $result =  $client->getObject([
-                'Bucket' => config('filestorage.aws_bucket'),
+                'Bucket' => !is_null($bucketname) ? $bucketname : config('filestorage.aws_bucket'),
                 'Key'    => $aws_file_id
             ]);
 
@@ -480,7 +480,7 @@ class FileStorageManager
         return $response;
     }
 
-    public function awsGetTemporaryPublicLink(string $aws_file_id, DateTime $datetime = null)
+    public function awsGetTemporaryPublicLink(string $aws_file_id, DateTime $datetime = null, string $bucketname = null)
     {
         $response = null;
 
@@ -492,7 +492,7 @@ class FileStorageManager
             $client = $this->getAwsClient();
 
             $cmd =  $client->getCommand('GetObject',[
-                'Bucket' => config('filestorage.aws_bucket'),
+                'Bucket' => !is_null($bucketname) ? $bucketname : config('filestorage.aws_bucket'),
                 'Key'    => $aws_file_id
             ]);
 
