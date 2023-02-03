@@ -327,7 +327,7 @@ class FileStorageManager
             $extension = $request->extension();
             $filename = $request->hashName();
             $filesize = $request->getSize();
-            $mime_type = $request->getMimeType();
+            $mime_type = $request->getClientMimeType();
 
             $datafile = file_get_contents($request);
 
