@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static mixed awsUpload(\Illuminate\Http\File|\Illuminate\Http\UploadedFile $request, string $subdirectory = null, string $bucketname = null)
  * @method static mixed awsDelete(string $aws_file_id, string $bucketname = null)
  * @method static mixed awsGetFileById(string $aws_file_id, string $bucketname = null)
+ * @method static mixed awsDownloadFile(string $aws_file_id, string $bucketname = null, string $savepath)
  * @method static mixed awsGetTemporaryPublicLink(string $aws_file_id, DateTime $datetime = null, string $bucketname = null)
  * @method static string statusSuccess()
  * @method static string statusError()

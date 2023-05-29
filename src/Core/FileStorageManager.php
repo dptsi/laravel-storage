@@ -480,6 +480,41 @@ class FileStorageManager
         return $response;
     }
 
+    public function awsDownloadFile(string $aws_file_id, string $bucketname = null, string $saveAspath)
+    {
+        $response = null;
+        try {
+            $client = $this->getAwsClient();
+
+            $result = $client->getObject(array(
+                'Bucket' => !is_null($bucketname) ? $bucketname : config('filestorage.aws_bucket'),
+                'Key'    => $aws_file_id,
+                'SaveAs'    => $saveAspath
+            ));
+
+            $data = array(
+                'message' => 'File success saved to '.$saveAspath,
+                'status' => self::STATUS_SUCCESS
+            );
+        } catch (S3Exception $e) {
+            if(file_exists($saveAspath)){
+                unlink($saveAspath);
+            }
+
+            $data = array(
+                'message' => $e->getAwsErrorMessage(),
+                'status' => self::STATUS_ERROR
+            );
+
+            $response = json_decode(json_encode($data), FALSE);        }
+
+        if (!$response) {
+            throw new ServerFailure('Server error.');
+        }
+
+        return $response;
+    }
+
     public function awsGetTemporaryPublicLink(string $aws_file_id, DateTime $datetime = null, string $bucketname = null)
     {
         $response = null;
