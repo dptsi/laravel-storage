@@ -10,8 +10,8 @@
   ],
   "minimum-stability": "dev",
   "require": {
-    "php": "^7.4|8.0.*|8.1.*|8.2.*",
-    "laravel/framework": "^8.12",
+    "php": ">7.4",
+    "laravel/framework": ">8.12",
     "guzzlehttp/guzzle": "^7.0.1",
     "ext-json": "*",
     "aws/aws-sdk-php": "^3.20.0"
