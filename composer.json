@@ -8,13 +8,12 @@
       "email": "developer@its.ac.id"
     }
   ],
-  "minimum-stability": "dev",
   "require": {
-    "php": "^7.4|8.0.*|8.1.*|8.2.*",
-    "laravel/framework": "^8.12",
-    "guzzlehttp/guzzle": "^7.0.1",
+    "php": "^8.0.2",
+    "laravel/framework": "^9.21|^10.0",
     "ext-json": "*",
-    "aws/aws-sdk-php": "^3.20.0"
+    "aws/aws-sdk-php": "^3.20.0",
+    "guzzlehttp/guzzle": "^7.8"
   },
   "autoload": {
     "psr-4": {
@@ -27,5 +26,7 @@
         "Dptsi\\FileStorage\\Providers\\FileStorageServiceProvider"
       ]
     }
-  }
+  },
+  "prefer-stable": true,
+  "minimum-stability": "dev"
 }
