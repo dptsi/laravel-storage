@@ -15,7 +15,7 @@ Install using composer:
 composer require dptsi/laravel-storage
 ```
 
-## Usage
+## example
 
 ### Upload
 
@@ -200,7 +200,7 @@ Return object
   +"string_data": bynary_string_data
 }
 ```
-usage
+example
 ```php
 use Dptsi\FileStorage\Facade\FileStorage;
 
@@ -216,7 +216,7 @@ FileStorage::gcsGetFileByIdAsString('gcs_file_id')
   +"stream_data": GuzzleHttp\Psr7\Stream
 }
 ```
-usage
+example
 ```php
 use Dptsi\FileStorage\Facade\FileStorage;
 
