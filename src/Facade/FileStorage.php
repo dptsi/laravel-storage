@@ -24,7 +24,6 @@ use Illuminate\Support\Facades\Facade;
  * @method static mixed gcsDownloadFile(string $gcs_file_id, string $savepath, string $bucketname = null, string $projectId = null)
  * @method static mixed gcsGetFileByIdAsString(string $gcs_file_id, string $bucketname = null, string $projectId = null)
  * @method static mixed gcsGetFileByIdAsStream(string $gcs_file_id, string $bucketname = null, string $projectId = null)
- * @method static mixed gcsDownloadFile(string $gcs_file_id, string $savepath, string $bucketname = null, string $projectId = null)
  * @method static mixed gcsGetTemporaryPublicLink(string $gcs_file_id, DateTime $datetime = null, string $bucketname = null, string $projectId = null)
  * @method static string statusSuccess()
  * @method static string statusError()
