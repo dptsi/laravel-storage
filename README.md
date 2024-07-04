@@ -145,7 +145,7 @@ FileStorage::awsGetFileById('aws_file_id');
 
 ```
 ### Google Storage
-Make sure your aws config exist on filestorage.php
+Make sure your google config exist on filestorage.php
 ```php
     'gcs_key_path'              => env('GOOGLE_KEY_PATH'),
     'gcs_project_id'            => env('GOOGLE_PROJECT_ID'),
