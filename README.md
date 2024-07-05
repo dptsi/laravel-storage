@@ -15,7 +15,7 @@ Install using composer:
 composer require dptsi/laravel-storage
 ```
 
-## Usage
+## example
 
 ### Upload
 
@@ -143,4 +143,94 @@ use Dptsi\FileStorage\Facade\FileStorage;
 
 FileStorage::awsGetFileById('aws_file_id');
 
+```
+### Google Storage
+Make sure your google config exist on filestorage.php
+```php
+    'gcs_key_path'              => env('GOOGLE_KEY_PATH'),
+    'gcs_project_id'            => env('GOOGLE_PROJECT_ID'),
+    'gcs_bucket'                => env('GOOGLE_BUCKET'),
+```
+
+### Upload to Google Storage
+ > @method static mixed gcsUpload(\Illuminate\Http\File|\Illuminate\Http\UploadedFile $data, string $subdirectory = null, string $bucketname = null, string $projectId = null)
+Using form(`\Illuminate\Http\UploadedFile` | `\Illuminate\Http\File`)
+Using the optional parameter sub-directory to make files uploaded to a sub-directory instead of the root directory. File ID on Google Storage use name of uploaded file instead generate uuid for that file, so make sure filename is unique.
+
+```php
+use Dptsi\FileStorage\Facade\FileStorage;
+
+FileStorage::gcsUpload($request->file('berkas'), 'images')
+//or
+FileStorage::gcsUpload($request->file('berkas'), 'assets/images')
+```
+
+### Delete from Google Storage
+ > @method static mixed gcsDelete(string $gcs_file_id, string $bucketname = null, string $projectId = null)
+
+```php
+use Dptsi\FileStorage\Facade\FileStorage;
+
+FileStorage::gcsDelete('gcs_file_id')
+```
+
+### Get File by ID from Google Storage
+ > @method static mixed gcsGetFileById(string $gcs_file_id, string $bucketname = null, string $projectId = null)
+ Return base64string data and metadata of the object
+ ```php
+use Dptsi\FileStorage\Facade\FileStorage;
+
+FileStorage::gcsGetFileById('gcs_file_id')
+```
+### Download File To Local Storage
+ > @method static mixed gcsDownloadFile(string $gcs_file_id, string $savepath, string $bucketname = null, string $projectId = null)
+ File downloaded into system directory
+  ```php
+use Dptsi\FileStorage\Facade\FileStorage;
+
+FileStorage::gcsDownloadFile('gcs_file_id', storage_path('temp/image.png'))
+```
+
+### Get File as Binary String
+ > @method static mixed gcsGetFileByIdAsString(string $gcs_file_id, string $bucketname = null, string $projectId = null)
+Return object
+```php
+{# ▼
+  +"status": "OK"
+  +"string_data": bynary_string_data
+}
+```
+example
+```php
+use Dptsi\FileStorage\Facade\FileStorage;
+
+FileStorage::gcsGetFileByIdAsString('gcs_file_id')
+```
+
+### Get File as Binary Stream
+ > @method static mixed gcsGetFileByIdAsStream(string $gcs_file_id, string $bucketname = null, string $projectId = null)
+ Return object
+```php
+{# ▼
+  +"status": "OK"
+  +"stream_data": GuzzleHttp\Psr7\Stream
+}
+```
+example
+```php
+use Dptsi\FileStorage\Facade\FileStorage;
+
+FileStorage::gcsGetFileByIdAsStream('gcs_file_id')
+```
+
+### Make Temporary public link from Google Storage
+You can use temporary public uri with 
+ > @method static mixed gcsGetTemporaryPublicLink(string $gcs_file_id, DateTime $datetime = null, string $bucketname = null, string $projectId = null)
+ Return object
+```php
+{# ▼
+  +"status": "OK"
+  +"expired_at": "xxxxxxxxxxxxx"
+  +"url": "xxxxxxxxxxxxx"
+}
 ```

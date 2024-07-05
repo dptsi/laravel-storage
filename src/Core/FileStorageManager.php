@@ -11,8 +11,11 @@ use Illuminate\Http\File;
 use Illuminate\Http\UploadedFile;
 use Aws\S3\S3Client;
 use Aws\S3\Exception\S3Exception;
+use Google\Cloud\Core\Exception\GoogleException;
 use DateTime;
 use Carbon\Carbon;
+use Google\Cloud\Storage\StorageClient;
+use stdClass;
 
 class FileStorageManager
 {
@@ -534,8 +537,8 @@ class FileStorageManager
             $request = $client->createPresignedRequest($cmd, $datetime);
 
             $data = array(
-                'url' => (string)$request->getUri(),
-                'expired_at' => $datetime->toDateTimeString(),
+                'url' => (string) $request->getUri(),
+                'expired_at' => $datetime->format('Y-m-d H:i:s'), // Changed to format method
                 'status' => self::STATUS_SUCCESS
             );
 
@@ -555,4 +558,402 @@ class FileStorageManager
 
         return $response;
     }
+
+    public function getGcsClient(string $projectId = null)
+    {
+        $keyFilePath = config('filestorage.gcs_key_path');
+        if(empty($projectId)){
+            $projectId = config('filestorage.gcs_project_id');
+        }
+
+        if(empty($keyFilePath) | empty($projectId)){
+            throw new InvalidArgument('Credential Not Found');
+        }
+
+        $storage = new StorageClient([
+            'keyFilePath' => $keyFilePath,
+            'projectId' => $projectId
+        ]);
+
+        return $storage;
+    }
+
+    public function gcsUpload(UploadedFile|File $file, string $subdirectory = null, string $bucketname = null, string $projectId = null)
+    {
+        if($file instanceof UploadedFile) {
+            $filename_extension = $file->getClientOriginalName();
+
+            $original_name = pathinfo($filename_extension, PATHINFO_FILENAME);
+            $original_name = preg_replace("/[^a-zA-Z0-9]+/", "", $original_name);
+            if ($original_name == '') {
+                $original_name = 'undefined' . time();
+            }
+
+            $extension = $file->extension();
+            $datafile = $file->get();
+        } elseif ($file instanceof File) {
+            $original_name = pathinfo($file->path(), PATHINFO_FILENAME);
+            $original_name = preg_replace("/[^a-zA-Z0-9]+/", "", $original_name);
+            if ($original_name == '') {
+                $original_name = 'undefined' . time();
+            }
+
+            $extension = pathinfo($file->getRealPath(), PATHINFO_EXTENSION);
+            $datafile = file_get_contents($file);
+        } else {
+            throw new InvalidArgument('Unsupported argument type.');
+        }
+
+        $response = null;
+
+        try {
+            $client = $this->getGcsClient($projectId);
+
+            $file_id = $file->hashName($subdirectory);
+
+            if(empty($bucketname)){
+                $bucketname = config('filestorage.gcs_bucket');
+            }
+
+            if(empty($bucketname)){
+                $bucketname = config('filestorage.gcs_bucket');
+            }
+
+            $bucket = $client->bucket($bucketname);
+
+            if(!$bucket->exists()){
+                throw new InvalidArgument('Bucket Not Found');
+            }
+
+            $result = $bucket->upload($datafile, ['name' => $file_id]);
+
+            $data = array(
+                'file_id' => $file_id,
+                'info' => array(
+                    'file_ext' => $extension,
+                    'file_id' => $file_id,
+                    'file_mimetype' => $result->info()['contentType'],
+                    'bucket' => $result->info()['bucket'],
+                    'file_name' => $original_name,
+                    'file_size' => $result->info()['size'],
+                    'public_link' => $result->info()['mediaLink'],
+                    'tag' => $result->info()['etag'],
+                    'timestamp' => date('Y-m-d H:m:s')
+                    ),
+                'message' => 'INSERT '.$file_id,
+                'status' => self::STATUS_SUCCESS
+            );
+
+            $response = json_decode(json_encode($data), FALSE);
+        } catch (GoogleException $th) {
+            $data = array(
+                'message' => $th->getMessage(),
+                'status' => self::STATUS_ERROR
+            );
+
+            $response = json_decode(json_encode($data), FALSE);
+        }
+
+        if (!$response) {
+            throw new ServerFailure('Server error.');
+        }
+
+        return $response;
+    }
+    public function  gcsDelete(string $gcs_file_id, string $bucketname = null, string $projectId = null)
+    {
+        try {
+            $client = $this->getGcsClient($projectId);
+
+            if(empty($bucketname)){
+                $bucketname = config('filestorage.gcs_bucket');
+            }
+
+            $bucket = $client->bucket($bucketname);
+
+            if(!$bucket->exists()){
+                throw new InvalidArgument('Bucket Not Found');
+            }
+
+            $result = $bucket->object($gcs_file_id);
+
+            if($result->exists()){
+
+                $result->delete();
+
+                $data = array(
+                    'message' => 'DELETE '.$gcs_file_id,
+                    'status' => self::STATUS_SUCCESS
+                );
+            }else{
+                $data = array(
+                    'message' => 'Object '.$gcs_file_id.' Not Found.',
+                    'status' => self::STATUS_ERROR
+                ); 
+            }
+
+            $response = json_decode(json_encode($data), FALSE);
+        } catch (GoogleException $th) {
+            $data = array(
+                'message' => $th->getMessage(),
+                'status' => self::STATUS_ERROR
+            );
+
+            $response = json_decode(json_encode($data), FALSE);
+        }
+
+        if (!$response) {
+            throw new ServerFailure('Server error.');
+        }
+
+        return $response;
+    }
+    public function  gcsGetFileById(string $gcs_file_id, string $bucketname = null, string $projectId = null)
+    {
+        try {
+            $client = $this->getGcsClient($projectId);
+
+            if(empty($bucketname)){
+                $bucketname = config('filestorage.gcs_bucket');
+            }
+
+            $bucket = $client->bucket($bucketname);
+
+            if(!$bucket->exists()){
+                throw new InvalidArgument('Bucket Not Found');
+            }
+
+            $result = $bucket->object($gcs_file_id);
+
+            if(!$result->exists()){
+                $data = array(
+                    'message' => 'Object '.$gcs_file_id.' Not Found.',
+                    'status' => self::STATUS_ERROR
+                );                 
+            }else{
+                $data = array(
+                    'data' => base64_encode($result->downloadAsString()),
+                    'info' => array(
+                        'file_ext' => pathinfo($result->info()['name'], PATHINFO_EXTENSION),
+                        'file_id' => $gcs_file_id,
+                        'file_mimetype' => $result->info()['contentType'],
+                        'bucket' => $result->info()['bucket'],
+                        'file_size' => $result->info()['size'],
+                        'public_link' => $result->info()['mediaLink'],
+                        'tag' => $result->info()['etag'],
+                        'timestamp' => $result->info()['timeCreated']
+                        ),
+                    'status' => self::STATUS_SUCCESS
+                );
+            }
+
+            $response = json_decode(json_encode($data), FALSE);
+        } catch (GoogleException $th) {
+            $data = array(
+                'message' => $th->getMessage(),
+                'status' => self::STATUS_ERROR
+            );
+
+            $response = json_decode(json_encode($data), FALSE);
+        }
+
+        if (!$response) {
+            throw new ServerFailure('Server error.');
+        }
+
+        return $response;
+    }
+    public function  gcsDownloadFile(string $gcs_file_id, string $saveAspath, string $bucketname = null, string $projectId = null)
+    {
+        try {
+            $client = $this->getGcsClient($projectId);
+
+            if(empty($bucketname)){
+                $bucketname = config('filestorage.gcs_bucket');
+            }
+
+            $bucket = $client->bucket($bucketname);
+
+            if(!$bucket->exists()){
+                throw new InvalidArgument('Bucket Not Found');
+            }
+
+            $result = $bucket->object($gcs_file_id);
+
+            if(!$result->exists()){
+                $data = array(
+                    'message' => 'Object '.$gcs_file_id.' Not Found.',
+                    'status' => self::STATUS_ERROR
+                );                 
+            }else{
+                $result->downloadToFile($saveAspath);
+
+                $data = array(
+                    'message' => 'File success saved to '.$saveAspath,
+                    'status' => self::STATUS_SUCCESS
+                );
+            }
+
+            $response = json_decode(json_encode($data), FALSE);
+        } catch (GoogleException $th) {
+            $data = array(
+                'message' => $th->getMessage(),
+                'status' => self::STATUS_ERROR
+            );
+
+            $response = json_decode(json_encode($data), FALSE);
+        }
+
+        if (!$response) {
+            throw new ServerFailure('Server error.');
+        }
+
+        return $response;
+    }
+    public function  gcsGetFileByIdAsString(string $gcs_file_id, string $bucketname = null, string $projectId = null)
+    {
+        try {
+            $client = $this->getGcsClient($projectId);
+
+            if(empty($bucketname)){
+                $bucketname = config('filestorage.gcs_bucket');
+            }
+
+            $bucket = $client->bucket($bucketname);
+
+            if(!$bucket->exists()){
+                throw new InvalidArgument('Bucket Not Found');
+            }
+
+            $result = $bucket->object($gcs_file_id);
+
+            if(!$result->exists()){
+                $data = array(
+                    'message' => 'Object '.$gcs_file_id.' Not Found.',
+                    'status' => self::STATUS_ERROR
+                );                 
+            }else{
+                $newdata = new stdClass();
+                $newdata->status = self::STATUS_SUCCESS;
+                $newdata->string_data = $result->downloadAsString();
+
+                return $newdata;
+            }
+
+            $response = json_decode(json_encode($data), FALSE);
+        } catch (GoogleException $th) {
+            $data = array(
+                'message' => $th->getMessage(),
+                'status' => self::STATUS_ERROR
+            );
+
+            $response = json_decode(json_encode($data), FALSE);
+        }
+
+        if (!$response) {
+            throw new ServerFailure('Server error.');
+        }
+
+        return $response;
+    }
+    public function  gcsGetFileByIdAsStream(string $gcs_file_id, string $bucketname = null, string $projectId = null)
+    {
+        try {
+            $client = $this->getGcsClient($projectId);
+
+            if(empty($bucketname)){
+                $bucketname = config('filestorage.gcs_bucket');
+            }
+
+            $bucket = $client->bucket($bucketname);
+
+            if(!$bucket->exists()){
+                throw new InvalidArgument('Bucket Not Found');
+            }
+
+            $result = $bucket->object($gcs_file_id);
+
+            if(!$result->exists()){
+                $data = array(
+                    'message' => 'Object '.$gcs_file_id.' Not Found.',
+                    'status' => self::STATUS_ERROR
+                );                 
+            }else{
+                $newdata = new stdClass();
+                $newdata->status = self::STATUS_SUCCESS;
+                $newdata->stream_data = $result->downloadAsStream();
+
+                return $newdata;
+            }
+
+            $response = json_decode(json_encode($data), FALSE);
+        } catch (GoogleException $th) {
+            $data = array(
+                'message' => $th->getMessage(),
+                'status' => self::STATUS_ERROR
+            );
+
+            $response = json_decode(json_encode($data), FALSE);
+        }
+
+        if (!$response) {
+            throw new ServerFailure('Server error.');
+        }
+
+        return $response;
+    }
+    public function  gcsGetTemporaryPublicLink(string $gcs_file_id, DateTime $datetime = null, string $bucketname = null, string $projectId = null)
+    {
+        $response = null;
+
+        if(!$datetime){
+            $datetime = Carbon::now()->addMinutes(30);
+        }
+        
+        try {
+            $client = $this->getGcsClient($projectId);
+
+            if(empty($bucketname)){
+                $bucketname = config('filestorage.gcs_bucket');
+            }
+
+            $bucket = $client->bucket($bucketname);
+
+            if(!$bucket->exists()){
+                throw new InvalidArgument('Bucket Not Found');
+            }
+
+            $result = $bucket->object($gcs_file_id);
+
+            if(!$result->exists()){
+                $data = array(
+                    'message' => 'Object '.$gcs_file_id.' Not Found.',
+                    'status' => self::STATUS_ERROR
+                );                 
+            }else{
+
+                $data = array(
+                    'url' => (string) $result->signedUrl($datetime),
+                    'expired_at' => $datetime->format('Y-m-d H:i:s'), // Changed to format method
+                    'status' => self::STATUS_SUCCESS
+                );
+            }
+
+            $response = json_decode(json_encode($data), FALSE);
+        } catch (GoogleException $th) {
+            $data = array(
+                'message' => $th->getMessage(),
+                'status' => self::STATUS_ERROR
+            );
+
+            $response = json_decode(json_encode($data), FALSE);
+        }
+
+        if (!$response) {
+            throw new ServerFailure('Server error.');
+        }
+
+        return $response;
+    }
+
 }

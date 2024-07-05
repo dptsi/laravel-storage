@@ -18,6 +18,13 @@ use Illuminate\Support\Facades\Facade;
  * @method static mixed awsGetFileById(string $aws_file_id, string $bucketname = null)
  * @method static mixed awsDownloadFile(string $aws_file_id, string $bucketname = null, string $savepath)
  * @method static mixed awsGetTemporaryPublicLink(string $aws_file_id, DateTime $datetime = null, string $bucketname = null)
+ * @method static mixed gcsUpload(\Illuminate\Http\File|\Illuminate\Http\UploadedFile $data, string $subdirectory = null, string $bucketname = null, string $projectId = null)
+ * @method static mixed gcsDelete(string $gcs_file_id, string $bucketname = null, string $projectId = null)
+ * @method static mixed gcsGetFileById(string $gcs_file_id, string $bucketname = null, string $projectId = null)
+ * @method static mixed gcsDownloadFile(string $gcs_file_id, string $savepath, string $bucketname = null, string $projectId = null)
+ * @method static mixed gcsGetFileByIdAsString(string $gcs_file_id, string $bucketname = null, string $projectId = null)
+ * @method static mixed gcsGetFileByIdAsStream(string $gcs_file_id, string $bucketname = null, string $projectId = null)
+ * @method static mixed gcsGetTemporaryPublicLink(string $gcs_file_id, DateTime $datetime = null, string $bucketname = null, string $projectId = null)
  * @method static string statusSuccess()
  * @method static string statusError()
  */
