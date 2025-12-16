@@ -499,6 +499,9 @@ class FileStorageManager
                 'message' => 'File success saved to '.$saveAspath,
                 'status' => self::STATUS_SUCCESS
             );
+            
+            $response = json_decode(json_encode($data), FALSE);        
+
         } catch (S3Exception $e) {
             if(file_exists($saveAspath)){
                 unlink($saveAspath);
@@ -509,7 +512,8 @@ class FileStorageManager
                 'status' => self::STATUS_ERROR
             );
 
-            $response = json_decode(json_encode($data), FALSE);        }
+            $response = json_decode(json_encode($data), FALSE);        
+        }
 
         if (!$response) {
             throw new ServerFailure('Server error.');
