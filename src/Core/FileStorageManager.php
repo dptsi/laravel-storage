@@ -316,7 +316,7 @@ class FileStorageManager
         return $s3;
     }
 
-    public function awsUpload($request, string $subdirectory = null, string $bucketname = null)
+    public function awsUpload($request, ?string $subdirectory = null, ?string $bucketname = null)
     {
         if($request instanceof UploadedFile) {
             $filename_extension = $request->getClientOriginalName();
@@ -405,7 +405,7 @@ class FileStorageManager
 
     }
 
-    public function awsDelete(string $aws_file_id, string $bucketname = null)
+    public function awsDelete(string $aws_file_id, ?string $bucketname = null)
     {
         $response = null;
 
@@ -440,7 +440,7 @@ class FileStorageManager
 
     }
 
-    public function awsGetFileById(string $aws_file_id, string $bucketname = null)
+    public function awsGetFileById(string $aws_file_id, ?string $bucketname = null)
     {
         $response = null;
 
@@ -483,7 +483,7 @@ class FileStorageManager
         return $response;
     }
 
-    public function awsDownloadFile(string $aws_file_id, string $bucketname = null, string $saveAspath)
+    public function awsDownloadFile(string $aws_file_id, ?string $bucketname, string $saveAspath)
     {
         $response = null;
         try {
@@ -522,7 +522,7 @@ class FileStorageManager
         return $response;
     }
 
-    public function awsGetTemporaryPublicLink(string $aws_file_id, DateTime $datetime = null, string $bucketname = null)
+    public function awsGetTemporaryPublicLink(string $aws_file_id, ?DateTime $datetime = null, ?string $bucketname = null)
     {
         $response = null;
 
@@ -563,7 +563,7 @@ class FileStorageManager
         return $response;
     }
 
-    public function getGcsClient(string $projectId = null)
+    public function getGcsClient(?string $projectId = null)
     {
         $keyFilePath = config('filestorage.gcs_key_path');
         if(empty($projectId)){
@@ -582,7 +582,7 @@ class FileStorageManager
         return $storage;
     }
 
-    public function gcsUpload(UploadedFile|File $file, string $subdirectory = null, string $bucketname = null, string $projectId = null)
+    public function gcsUpload(UploadedFile|File $file, ?string $subdirectory = null, ?string $bucketname = null, ?string $projectId = null)
     {
         if($file instanceof UploadedFile) {
             $filename_extension = $file->getClientOriginalName();
@@ -664,7 +664,7 @@ class FileStorageManager
 
         return $response;
     }
-    public function  gcsDelete(string $gcs_file_id, string $bucketname = null, string $projectId = null)
+    public function  gcsDelete(string $gcs_file_id, ?string $bucketname = null, ?string $projectId = null)
     {
         try {
             $client = $this->getGcsClient($projectId);
@@ -712,7 +712,7 @@ class FileStorageManager
 
         return $response;
     }
-    public function  gcsGetFileById(string $gcs_file_id, string $bucketname = null, string $projectId = null)
+    public function  gcsGetFileById(string $gcs_file_id, ?string $bucketname = null, ?string $projectId = null)
     {
         try {
             $client = $this->getGcsClient($projectId);
@@ -767,7 +767,7 @@ class FileStorageManager
 
         return $response;
     }
-    public function  gcsDownloadFile(string $gcs_file_id, string $saveAspath, string $bucketname = null, string $projectId = null)
+    public function  gcsDownloadFile(string $gcs_file_id, string $saveAspath, ?string $bucketname = null, ?string $projectId = null)
     {
         try {
             $client = $this->getGcsClient($projectId);
@@ -814,7 +814,7 @@ class FileStorageManager
 
         return $response;
     }
-    public function  gcsGetFileByIdAsString(string $gcs_file_id, string $bucketname = null, string $projectId = null)
+    public function  gcsGetFileByIdAsString(string $gcs_file_id, ?string $bucketname = null, ?string $projectId = null)
     {
         try {
             $client = $this->getGcsClient($projectId);
@@ -860,7 +860,7 @@ class FileStorageManager
 
         return $response;
     }
-    public function  gcsGetFileByIdAsStream(string $gcs_file_id, string $bucketname = null, string $projectId = null)
+    public function  gcsGetFileByIdAsStream(string $gcs_file_id, ?string $bucketname = null, ?string $projectId = null)
     {
         try {
             $client = $this->getGcsClient($projectId);
@@ -906,7 +906,7 @@ class FileStorageManager
 
         return $response;
     }
-    public function  gcsGetTemporaryPublicLink(string $gcs_file_id, DateTime $datetime = null, string $bucketname = null, string $projectId = null)
+    public function  gcsGetTemporaryPublicLink(string $gcs_file_id, ?DateTime $datetime = null, ?string $bucketname = null, ?string $projectId = null)
     {
         $response = null;
 

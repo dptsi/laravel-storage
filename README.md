@@ -4,8 +4,8 @@ A helper package for access ITS file storage API in laravel framework
 
 ## Requirements
 
-1. PHP 7.4 or greater
-2. Laravel version 8
+1. PHP 8.0 or greater (compatible up to PHP 8.5)
+2. Laravel version 8 - 13
 
 ## Installation
 
